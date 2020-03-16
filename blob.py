@@ -5,14 +5,12 @@ import math as m
 
 class Blob:
     # Area of a BLOB is the number of pixels the BLOB consists of.
-    label = 0
 
-    def __init__(self, ):
-        Blob.label = Blob.label + 1
-        self.eccentricity = 0
-        self.ratio1 = 0  # MinorAxisLength / MajorAxisLength
-        self.ratio2 = 0  # Perimeter / Area
-        self.Label = Blob.label
+
+    def __init__(self):
+        self.Eccentricity = 0
+        self.Ratio1 = 0  # MinorAxisLength / MajorAxisLength
+        self.Ratio2 = 0  # Perimeter / Area
 
     def extractfeature(self, image):
         res = image[:]
@@ -21,26 +19,25 @@ class Blob:
         cnt = contours[0]
         area = cv.contourArea(cnt)
         perimeter = cv.arcLength(cnt, True)
-        self.ratio2 = perimeter/area
+        self.Ratio2 = perimeter/area
 
         ellipse = cv.fitEllipse(cnt)
         (x, y), (Major, minor), angle = ellipse
         MA = max(Major, minor)
         ma = min(Major, minor)
-        self.ratio1 = MA / ma
+        self.Ratio1 = MA / ma
         a = MA/2
         b = ma/2
         c = m.sqrt(m.pow(a,2) - m.pow(b,2))
         e = c/a
-        self.eccentricity = e
+        self.Eccentricity = e
 
-        return [area, perimeter, MA, ma, e]
+        return [self.Eccentricity, self.Ratio1, self.Ratio2]
 
     def features(self):
-        return [self.eccentricity, self.ratio1, self.ratio2, self.Label]
+        return [self.Eccentricity, self.Ratio1, self.Ratio2]
 
     def findobjects(self, image, features):
-        labels = []
         feat = np.array(features, float)
         res = image[:]
         ret, thresh = cv.threshold(res, 127, 255, 0)
@@ -49,27 +46,28 @@ class Blob:
         for cnt in contours:
             area = cv.contourArea(cnt)
             perimeter = cv.arcLength(cnt, True)
-            self.ratio2 = perimeter / area
+            self.Ratio2 = perimeter / area
 
             ellipse = cv.fitEllipse(cnt)
             (x, y), (Major, minor), angle = ellipse
             MA = max(Major, minor)
             ma = min(Major, minor)
-            self.ratio1 = MA / ma
+            self.Ratio1 = MA / ma
 
             a = MA / 2
             b = ma / 2
             c = m.sqrt(m.pow(a, 2) - m.pow(b, 2))
             e = c / a
-            self.eccentricity = e
+            self.Eccentricity = e
 
             distancelist = []
+            label = []
             for i in feat:
-                data = m.sqrt(m.pow(i[0] - self.eccentricity, 2) + m.pow(i[1] - self.ratio1, 2) + m.pow(i[2] - self.ratio1, 2))
+                data = m.sqrt(m.pow(i[0] - self.Eccentricity, 2) + m.pow(i[1] - self.Ratio1, 2) + m.pow(i[2] - self.Ratio1, 2))
                 distancelist.append(data)
-            # print(distancelist)
-            # print(distancelist.index(min(distancelist)) + 1)
-            labels.append(distancelist.index(min(distancelist)) + 1)
+                label.append(i[3])
+            index = distancelist.index(min(distancelist))
+            labels.append(label[index])
             distancelist.clear()
         return labels
     # WHAT IS BLOB
